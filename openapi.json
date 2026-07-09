@@ -1,0 +1,51 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API Docs",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/menu": {
+      "get": {
+        "summary": "Retrieve menu items",
+        "description": "Returns a list of available menu items from the restaurant.",
+        "tags": [
+          "Menu"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "A list of menu items."
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new menu item",
+        "description": "Adds a new item to the menu with the provided name and price.",
+        "tags": [
+          "Menu"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Menu item created successfully."
+          },
+          "400": {
+            "description": "Invalid input, name and price are required."
+          }
+        },
+        "requestBody": {
+          "description": "Menu item details to be created.",
+          "content": {
+            "application/json": {
+              "example": {
+                "name": "Burger",
+                "price": 12.99
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,320 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API Docs",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/": {
+      "post": {
+        "summary": "Create a new candidate",
+        "description": "Allows an authenticated administrator to add a new candidate to the database. The request body should contain the candidate's details.",
+        "tags": [
+          "Candidates"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Candidate created successfully"
+          },
+          "403": {
+            "description": "Forbidden: User does not have admin role"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "description": "Candidate data to be added",
+          "content": {
+            "application/json": {
+              "example": {
+                "name": "John Doe",
+                "party": "ABC Party"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Retrieve a list of all candidates",
+        "description": "Fetches all candidates from the database, returning only their name and party affiliation.",
+        "tags": [
+          "Candidates"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "A list of candidates, each with their name and party."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        }
+      }
+    },
+    "/{candidateID}": {
+      "put": {
+        "summary": "Update an existing candidate's details",
+        "description": "Updates the details of a specific candidate identified by their ID. This operation requires authentication and admin privileges. The request body should contain the fields to be updated for the candidate.",
+        "tags": [
+          "Candidates"
+        ],
+        "parameters": [
+          {
+            "name": "candidateID",
+            "in": "path",
+            "required": true,
+            "description": "The unique identifier of the candidate to be updated.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Candidate data updated successfully. Returns the updated candidate object."
+          },
+          "403": {
+            "description": "Forbidden. User does not have admin role."
+          },
+          "404": {
+            "description": "Not Found. Candidate with the specified ID was not found."
+          },
+          "500": {
+            "description": "Internal Server Error. An unexpected error occurred on the server."
+          }
+        },
+        "requestBody": {
+          "description": "Data to update the candidate. The fields provided in the request body will overwrite the existing values for the specified candidate.",
+          "content": {
+            "application/json": {
+              "example": {
+                "name": "Updated Candidate Name",
+                "party": "New Party",
+                "age": 45
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a candidate by ID",
+        "description": "Deletes a specific candidate from the database using their unique ID. This operation requires administrator privileges.",
+        "tags": [
+          "Candidates",
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "name": "candidateID",
+            "in": "path",
+            "required": true,
+            "description": "The unique identifier of the candidate to delete.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Candidate successfully deleted."
+          },
+          "403": {
+            "description": "User does not have admin role."
+          },
+          "404": {
+            "description": "Candidate not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        }
+      }
+    },
+    "/vote/count": {
+      "get": {
+        "summary": "Get current vote counts by party",
+        "description": "Retrieves a list of all candidates, sorted by their vote count in descending order, and returns the total vote count for each party.",
+        "tags": [
+          "Voting"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful retrieval of vote counts by party. Returns an array of objects, each containing the party name and its total vote count."
+          },
+          "500": {
+            "description": "Internal server error occurred while fetching vote counts."
+          }
+        }
+      }
+    },
+    "/vote/{candidateID}": {
+      "get": {
+        "summary": "Record a vote for a candidate",
+        "description": "Allows an authenticated user to cast a vote for a specific candidate. Admins are not permitted to vote, and each user can only vote once. Upon successful voting, the candidate's vote count is incremented, and the user's status is updated to reflect that they have voted.",
+        "tags": [
+          "Voting",
+          "Candidates"
+        ],
+        "parameters": [
+          {
+            "name": "candidateID",
+            "in": "path",
+            "required": true,
+            "description": "The unique identifier of the candidate to vote for.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vote recorded successfully."
+          },
+          "400": {
+            "description": "User has already voted."
+          },
+          "403": {
+            "description": "Admin users are not allowed to vote."
+          },
+          "404": {
+            "description": "Candidate or user not found."
+          },
+          "500": {
+            "description": "Internal Server Error."
+          }
+        }
+      }
+    },
+    "/signup": {
+      "post": {
+        "summary": "Register a new user account",
+        "description": "This endpoint allows new users to sign up for an account. It validates the provided user data, including the Aadhar Card Number for format and uniqueness, and prevents the creation of multiple admin users. Upon successful registration, a new user record is created, and an authentication token is returned.",
+        "tags": [
+          "User Management",
+          "Authentication"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User registered successfully. Returns the new user's data and an authentication token."
+          },
+          "400": {
+            "description": "Bad Request. Possible errors: 'Admin user already exists', 'Aadhar Card Number must be exactly 12 digits', or 'User with the same Aadhar Card Number already exists'."
+          },
+          "500": {
+            "description": "Internal Server Error. An unexpected error occurred on the server."
+          }
+        },
+        "requestBody": {
+          "description": "User registration details, including personal information, Aadhar Card Number, password, and role.",
+          "content": {
+            "application/json": {
+              "example": {
+                "name": "John Doe",
+                "age": 30,
+                "email": "john.doe@example.com",
+                "address": "123 Main St",
+                "mobile": "9876543210",
+                "aadharCardNumber": "123456789012",
+                "password": "securepassword123",
+                "role": "voter"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "Logs in a user and returns an authentication token.",
+        "description": "Authenticates a user using their Aadhar Card Number and password. Upon successful authentication, a JSON Web Token (JWT) is returned for subsequent authorized requests.",
+        "tags": [
+          "Authentication"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful login, returns a JWT token."
+          },
+          "400": {
+            "description": "Aadhar Card Number or password is missing from the request body."
+          },
+          "401": {
+            "description": "Invalid Aadhar Card Number or Password."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        },
+        "requestBody": {
+          "description": "User credentials for login.",
+          "content": {
+            "application/json": {
+              "example": {
+                "aadharCardNumber": "123456789012",
+                "password": "yourpassword"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile": {
+      "get": {
+        "summary": "Get authenticated user's profile",
+        "description": "Retrieves the profile details of the currently authenticated user. The user's ID is extracted from the JWT token.",
+        "tags": [
+          "User"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User profile retrieved successfully."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/profile/password": {
+      "put": {
+        "summary": "Update the authenticated user's password",
+        "description": "Allows an authenticated user to change their password by providing their current password and a new password. Requires a valid JWT for authentication.",
+        "tags": [
+          "User",
+          "Authentication"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Password updated successfully."
+          },
+          "400": {
+            "description": "Bad Request. Both 'currentPassword' and 'newPassword' are required in the request body."
+          },
+          "401": {
+            "description": "Unauthorized. Invalid current password provided or user not found (due to invalid token)."
+          },
+          "500": {
+            "description": "Internal Server Error. An unexpected error occurred on the server."
+          }
+        },
+        "requestBody": {
+          "description": "JSON object containing the current password and the new password.",
+          "content": {
+            "application/json": {
+              "example": {
+                "currentPassword": "oldPassword123",
+                "newPassword": "newStrongPassword456"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

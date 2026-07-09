@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RouteDocs — Instant API Documentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-950:#0a0d13; --bg-900:#11151d; --surface:#161b25; --surface-hi:#1c2230;
+    --border:rgba(255,255,255,0.08); --text:#e7eaf0; --text-dim:rgba(231,234,240,0.55);
+    --accent:#6d8cff; --accent-dim:rgba(109,140,255,0.15);
+    --get:#3b82f6; --post:#22c55e; --put:#f59e0b; --delete:#ef4444; --patch:#a855f7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; font-family:'Manrope',sans-serif; color:var(--text);
+    background:radial-gradient(ellipse at 30% -10%, rgba(109,140,255,0.10), transparent 50%), var(--bg-950);
+    padding:48px 20px;
+  }
+  .wrap{ max-width:760px; margin:0 auto; }
+  header{ text-align:center; margin-bottom:36px; }
+  h1{
+    font-size:32px; margin:0 0 8px; letter-spacing:-0.02em;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+  }
+  h1 .brace{ color:var(--accent); font-family:'JetBrains Mono',monospace; }
+  header p{ color:var(--text-dim); margin:0; font-size:15px; }
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:14px;
+    padding:22px; margin-bottom:20px;
+  }
+  .tabs{ display:flex; gap:6px; margin-bottom:16px; }
+  .tab{
+    flex:1; text-align:center; padding:9px; border-radius:9px; cursor:pointer;
+    font-size:13.5px; font-weight:600; color:var(--text-dim); background:transparent;
+    border:1px solid var(--border);
+  }
+  .tab.active{ background:var(--accent-dim); color:var(--accent); border-color:var(--accent); }
+
+  textarea{
+    width:100%; min-height:220px; background:var(--bg-900); color:var(--text);
+    border:1px solid var(--border); border-radius:10px; padding:14px;
+    font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6; resize:vertical;
+  }
+  .drop-zone{
+    border:1.5px dashed var(--border); border-radius:10px; padding:34px 16px;
+    text-align:center; color:var(--text-dim); font-size:14px; cursor:pointer;
+  }
+  .drop-zone.hover{ border-color:var(--accent); color:var(--accent); }
+  .drop-zone input{ display:none; }
+  .file-name{ margin-top:10px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--accent); }
+
+  .generate-btn{
+    width:100%; margin-top:16px; padding:13px; border:none; border-radius:10px;
+    background:var(--accent); color:#0a0d13; font-weight:700; font-size:14.5px; cursor:pointer;
+  }
+  .generate-btn:disabled{ opacity:0.6; cursor:not-allowed; }
+
+  #status{ text-align:center; color:var(--text-dim); font-size:13.5px; margin:14px 0; font-family:'JetBrains Mono',monospace; }
+
+  .endpoint{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    margin-bottom:14px; overflow:hidden;
+  }
+  .endpoint-head{
+    display:flex; align-items:center; gap:12px; padding:14px 16px; cursor:pointer;
+  }
+  .method{
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12px;
+    padding:4px 10px; border-radius:6px; color:#0a0d13; flex-shrink:0; width:56px; text-align:center;
+  }
+  .method.GET{ background:var(--get); } .method.POST{ background:var(--post); }
+  .method.PUT{ background:var(--put); } .method.PATCH{ background:var(--patch); }
+  .method.DELETE{ background:var(--delete); }
+  .path{ font-family:'JetBrains Mono',monospace; font-size:14px; }
+  .summary{ color:var(--text-dim); font-size:13px; margin-left:auto; }
+
+  .endpoint-body{ padding:0 16px 18px; border-top:1px solid var(--border); display:none; }
+  .endpoint-body.open{ display:block; }
+  .endpoint-body h4{ font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); margin:16px 0 8px; }
+  .endpoint-body p{ font-size:13.5px; color:var(--text-dim); line-height:1.6; margin:0; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; }
+  th, td{ text-align:left; padding:6px 8px; border-bottom:1px solid var(--border); }
+  th{ color:var(--text-dim); font-weight:600; }
+  code{ font-family:'JetBrains Mono',monospace; background:var(--bg-900); padding:2px 6px; border-radius:5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="brace">&lt;/&gt;</span> RouteDocs</h1>
+    <p>Paste or upload Express route code — get instant AI-generated API docs.</p>
+  </header>
+
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active" data-tab="paste">Paste Code</div>
+      <div class="tab" data-tab="upload">Upload File</div>
+    </div>
+
+    <div id="pasteTab">
+      <textarea id="codeInput" placeholder="router.get('/menu', (req, res) => { ... });"></textarea>
+    </div>
+
+    <div id="uploadTab" style="display:none;">
+      <label class="drop-zone" id="dropZone">
+        Click to choose a .js file, or drag it here
+        <input type="file" id="fileInput" accept=".js" />
+      </label>
+      <div class="file-name" id="fileName"></div>
+    </div>
+
+    <button class="generate-btn" id="generateBtn">Generate Docs</button>
+  </div>
+
+  <div id="status"></div>
+  <div id="results"></div>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab');
+  const pasteTab = document.getElementById('pasteTab');
+  const uploadTab = document.getElementById('uploadTab');
+  const codeInput = document.getElementById('codeInput');
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const fileName = document.getElementById('fileName');
+  const generateBtn = document.getElementById('generateBtn');
+  const statusEl = document.getElementById('status');
+  const resultsEl = document.getElementById('results');
+
+  let activeTab = 'paste';
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeTab = tab.dataset.tab;
+      pasteTab.style.display = activeTab === 'paste' ? 'block' : 'none';
+      uploadTab.style.display = activeTab === 'upload' ? 'block' : 'none';
+    });
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) fileName.textContent = fileInput.files[0].name;
+  });
+
+  generateBtn.addEventListener('click', async () => {
+    resultsEl.innerHTML = '';
+    generateBtn.disabled = true;
+    statusEl.textContent = 'Scanning code and asking AI to document each route...';
+
+    try {
+      let response;
+
+      if (activeTab === 'upload' && fileInput.files[0]) {
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        response = await fetch('/api/generate', { method: 'POST', body: formData });
+      } else {
+        if (!codeInput.value.trim()) {
+          statusEl.textContent = 'Please paste some code or upload a file first.';
+          generateBtn.disabled = false;
+          return;
+        }
+        response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: codeInput.value }),
+        });
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        statusEl.textContent = data.error || 'Something went wrong.';
+        return;
+      }
+      if (!data.spec || data.routeCount === 0) {
+        statusEl.textContent = data.message || 'No routes found in this code.';
+        return;
+      }
+
+      statusEl.textContent = `Found ${data.routeCount} route(s).`;
+      renderSpec(data.spec);
+    } catch (err) {
+      statusEl.textContent = 'Could not reach the server. Is it running?';
+      console.error(err);
+    } finally {
+      generateBtn.disabled = false;
+    }
+  });
+
+  function renderSpec(spec) {
+    resultsEl.innerHTML = '';
+    for (const [routePath, methods] of Object.entries(spec.paths)) {
+      for (const [method, op] of Object.entries(methods)) {
+        resultsEl.appendChild(buildEndpointCard(routePath, method, op));
+      }
+    }
+  }
+
+  function buildEndpointCard(routePath, method, op) {
+    const card = document.createElement('div');
+    card.className = 'endpoint';
+
+    const head = document.createElement('div');
+    head.className = 'endpoint-head';
+    head.innerHTML = `
+      <span class="method ${method.toUpperCase()}">${method.toUpperCase()}</span>
+      <span class="path">${routePath}</span>
+      <span class="summary">${op.summary || ''}</span>
+    `;
+
+    const body = document.createElement('div');
+    body.className = 'endpoint-body';
+
+    let paramsHtml = '<p>No parameters</p>';
+    if (op.parameters && op.parameters.length) {
+      paramsHtml = `<table><tr><th>Name</th><th>In</th><th>Required</th><th>Description</th></tr>
+        ${op.parameters.map(p => `<tr><td><code>${p.name}</code></td><td>${p.in}</td><td>${p.required ? 'Yes' : 'No'}</td><td>${p.description || ''}</td></tr>`).join('')}
+      </table>`;
+    }
+
+    let bodyHtml = '';
+    if (op.requestBody) {
+      bodyHtml = `<h4>Request Body</h4><p>${op.requestBody.description || ''}</p>
+        <pre><code>${JSON.stringify(op.requestBody.content?.['application/json']?.example || {}, null, 2)}</code></pre>`;
+    }
+
+    const responsesHtml = `<table><tr><th>Code</th><th>Description</th></tr>
+      ${Object.entries(op.responses || {}).map(([code, r]) => `<tr><td><code>${code}</code></td><td>${r.description || ''}</td></tr>`).join('')}
+    </table>`;
+
+    body.innerHTML = `
+      <h4>Description</h4>
+      <p>${op.description || 'No description available.'}</p>
+      <h4>Parameters</h4>
+      ${paramsHtml}
+      ${bodyHtml}
+      <h4>Responses</h4>
+      ${responsesHtml}
+    `;
+
+    head.addEventListener('click', () => body.classList.toggle('open'));
+
+    card.appendChild(head);
+    card.appendChild(body);
+    return card;
+  }
+</script>
+</body>
+</html>
