@@ -1,6 +1,6 @@
 const code = `
 router.get('/hello', (req, res) => {
-  res.json({ message: 'Hello mars' });
+  res.json({ message: 'Hello Mars' });
 });
 `;
 
